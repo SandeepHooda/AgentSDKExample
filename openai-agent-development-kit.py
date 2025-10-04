@@ -9,12 +9,38 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 import uvicorn
 
+
+models = ["gpt-4-1106-preview", "gpt-4o", "gpt-4o-mini"]
+tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_current_weather",
+                "description": "Get the current weather for a given latitude and longitude.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The latitude and longitude, e.g., '37.7749,-122.4194'",
+                        },
+                        "unit": {"type": "string", "enum": ["celsius", "fahrenheit"], "default": "celsius"},
+                    },
+                    "required": ["location"],
+                },
+            },
+        }
+    ]
+
+
+
 # Load environment variables from .env file
 load_dotenv()
 
 # It's recommended to set the API key via environment variable for security
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 app = FastAPI()
+
 
 # --- Pydantic Models for OpenWeatherMap API Response ---
 class WeatherMain(BaseModel):
@@ -54,7 +80,7 @@ def get_current_weather(location: str, unit: str = "celsius"):
         weather_data = response.json()
 
         # Parse with Pydantic
-        parsed_data = WeatherResponse.parse_obj(weather_data)
+        parsed_data = WeatherResponse.model_validate(weather_data)
 
         # Convert Kelvin to Celsius
         temp_celsius = parsed_data.main.temp - 273.15
@@ -65,28 +91,6 @@ def get_current_weather(location: str, unit: str = "celsius"):
         return json.dumps({"location": location, "temperature": "unknown", "error": str(e)})
     except Exception as e:
         return json.dumps({"location": location, "temperature": "unknown", "error": f"Failed to parse weather data: {e}"})
-
-
-tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "get_current_weather",
-                "description": "Get the current weather for a given latitude and longitude.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "The latitude and longitude, e.g., '37.7749,-122.4194'",
-                        },
-                        "unit": {"type": "string", "enum": ["celsius", "fahrenheit"], "default": "celsius"},
-                    },
-                    "required": ["location"],
-                },
-            },
-        }
-    ]
 
 available_functions = {
             "get_current_weather": get_current_weather,
@@ -104,7 +108,7 @@ async def run_conversation(user_message: str):
 
     # 2. First response from the model
     response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model=models[2],
         messages=messages,
         tools=tools, # 2.1 Register tools (text description of tools) so that AI can decide to use it
         tool_choice="auto",
@@ -136,7 +140,7 @@ async def run_conversation(user_message: str):
 
         # Second response from the model
         second_response = client.chat.completions.create(
-            model="gpt-4-1106-preview",
+            model=models[2],
             messages=messages,
         )
         return f"{greeting} {second_response.choices[0].message.content}"
