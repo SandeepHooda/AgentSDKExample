@@ -87,6 +87,11 @@ tools = [
             },
         }
     ]
+
+available_functions = {
+            "get_current_weather": get_current_weather,
+        }
+
 async def run_conversation(user_message: str):
     """Starts a conversation with the OpenAI agent."""
     greeting = get_time_based_greeting()
@@ -96,28 +101,27 @@ async def run_conversation(user_message: str):
         "content": user_message
     }]
 
-     
-    # First response from the model
+
+    # 2. First response from the model
     response = client.chat.completions.create(
         model="gpt-4-1106-preview",
         messages=messages,
-        tools=tools,
+        tools=tools, # 2.1 Register tools (text description of tools) so that AI can decide to use it
         tool_choice="auto",
     )
     response_message = response.choices[0].message
     tool_calls = response_message.tool_calls
 
+    # 3. If there's a tool call, execute it and get the result
     if tool_calls:
-        available_functions = {
-            "get_current_weather": get_current_weather,
-        }
+
         messages.append(response_message)
 
         for tool_call in tool_calls:
             function_name = tool_call.function.name
-            function_to_call = available_functions[function_name]
+            function_to_call = available_functions[function_name] # 3.1 Map tool call to actual function from available functions array
             function_args = json.loads(tool_call.function.arguments)
-            function_response = function_to_call(
+            function_response = function_to_call( # 3.2 A simple python function call to the function with arguments from AI's first response
                 location=function_args.get("location"),
                 unit=function_args.get("unit"),
             )
@@ -143,7 +147,7 @@ async def run_conversation(user_message: str):
 async def read_root():
     with open("index.html") as f:
         return f.read()
-
+# 1. Receive a request with a location
 @app.post("/chat")
 async def chat(request: Request):
     data = await request.json()
