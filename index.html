@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Agent</title>
+    <style>
+        body { font-family: sans-serif; }
+        #chat-container { width: 500px; margin: 0 auto; }
+        #chat-history { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
+        #user-input { display: flex; margin-top: 10px; }
+        #location-input { flex-grow: 1; }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h2>Weather Agent</h2>
+        <div id="chat-history"></div>
+        <div id="user-input">
+            <input type="text" id="location-input" placeholder="Enter latitude,longitude (e.g., 37.7749,-122.4194)">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('send-button').addEventListener('click', async () => {
+            const locationInput = document.getElementById('location-input');
+            const location = locationInput.value;
+            const chatHistory = document.getElementById('chat-history');
+
+            if (location) {
+                chatHistory.innerHTML += `<p><strong>You:</strong> What's the weather like at ${location}?</p>`;
+
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ location: location })
+                });
+
+                const data = await response.json();
+                chatHistory.innerHTML += `<p><strong>Agent:</strong> ${data.response}</p>`;
+                locationInput.value = '';
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
