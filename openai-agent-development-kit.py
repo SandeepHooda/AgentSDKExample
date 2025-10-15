@@ -39,7 +39,58 @@ load_dotenv()
 
 # It's recommended to set the API key via environment variable for security
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-app = FastAPI()
+
+async def run_conversation(user_message: str):
+    # 1. Starts a conversation with the OpenAI agent.
+    greeting = get_time_based_greeting()
+
+    messages = [{
+        "role": "user",
+        "content": user_message
+    }]
+
+
+    # 2. First response from the model
+    response = client.chat.completions.create(
+        model=models[2],
+        messages=messages,
+        tools=tools, # 2.1 Register tools (text description of tools) so that AI can decide to use it
+        tool_choice="auto",
+    )
+    # 2.2 check if model decided to call a tool
+    response_message = response.choices[0].message
+    tool_calls = response_message.tool_calls
+
+    # 3. If there's a tool call, execute it and get the result
+    if tool_calls:
+
+        messages.append(response_message)
+
+        for tool_call in tool_calls:
+            function_name = tool_call.function.name
+            function_to_call = available_functions[function_name] # 3.1 Map tool call to actual function from available functions array
+            function_args = json.loads(tool_call.function.arguments)
+            function_response = function_to_call( # 3.2 A simple python function call to the function with arguments from AI's first response
+                location=function_args.get("location"),
+                unit=function_args.get("unit"),
+            )
+            messages.append(
+                {
+                    "tool_call_id": tool_call.id,
+                    "role": "tool",
+                    "name": function_name,
+                    "content": function_response,
+                }
+            )
+
+        # 3.1 Second response from the model
+        second_response = client.chat.completions.create(
+            model=models[2],
+            messages=messages,
+        )
+        return f"{greeting} {second_response.choices[0].message.content}"
+    else:
+        return f"{greeting} {response_message.content}"
 
 
 # --- Pydantic Models for OpenWeatherMap API Response ---
@@ -95,57 +146,7 @@ def get_current_weather(location: str, unit: str = "celsius"):
 available_functions = {
             "get_current_weather": get_current_weather,
         }
-
-async def run_conversation(user_message: str):
-    """Starts a conversation with the OpenAI agent."""
-    greeting = get_time_based_greeting()
-
-    messages = [{
-        "role": "user",
-        "content": user_message
-    }]
-
-
-    # 2. First response from the model
-    response = client.chat.completions.create(
-        model=models[2],
-        messages=messages,
-        tools=tools, # 2.1 Register tools (text description of tools) so that AI can decide to use it
-        tool_choice="auto",
-    )
-    response_message = response.choices[0].message
-    tool_calls = response_message.tool_calls
-
-    # 3. If there's a tool call, execute it and get the result
-    if tool_calls:
-
-        messages.append(response_message)
-
-        for tool_call in tool_calls:
-            function_name = tool_call.function.name
-            function_to_call = available_functions[function_name] # 3.1 Map tool call to actual function from available functions array
-            function_args = json.loads(tool_call.function.arguments)
-            function_response = function_to_call( # 3.2 A simple python function call to the function with arguments from AI's first response
-                location=function_args.get("location"),
-                unit=function_args.get("unit"),
-            )
-            messages.append(
-                {
-                    "tool_call_id": tool_call.id,
-                    "role": "tool",
-                    "name": function_name,
-                    "content": function_response,
-                }
-            )
-
-        # Second response from the model
-        second_response = client.chat.completions.create(
-            model=models[2],
-            messages=messages,
-        )
-        return f"{greeting} {second_response.choices[0].message.content}"
-    else:
-        return f"{greeting} {response_message.content}"
+app = FastAPI()
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
