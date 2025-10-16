@@ -3,6 +3,7 @@ from agents import Agent, ModelSettings, TResponseInputItem, Runner, RunConfig
 from openai.types.shared.reasoning import Reasoning
 import asyncio
 
+
 class WebResearchAgentSchema__CompaniesItem(BaseModel):
   company_name: str
   industry: str
@@ -109,6 +110,7 @@ async def run_workflow(workflow_input: WorkflowInput):
     "output_parsed": summarize_and_display_result_temp.final_output.model_dump()
   }
   print(summarize_and_display_result)
+  return summarize_and_display_result
 
 if __name__ == "__main__":
   workflow_input: WorkflowInput = WorkflowInput(
