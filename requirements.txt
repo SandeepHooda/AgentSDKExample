@@ -3,4 +3,7 @@ python-dotenv
 requests
 pydantic
 fastapi
-uvicorn
+openai-agents
+google-cloud-secret-manager
+uvicorn[standard]
+gunicorn

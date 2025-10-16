@@ -1,13 +1,10 @@
-import os
 from openai import OpenAI
 from datetime import datetime
 import json
 from dotenv import load_dotenv
 import requests
 from pydantic import BaseModel
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-import uvicorn
+from com.services.gcp_secret import get_secret_value
 
 
 models = ["gpt-4-1106-preview", "gpt-4o", "gpt-4o-mini"]
@@ -38,7 +35,8 @@ tools = [
 load_dotenv()
 
 # It's recommended to set the API key via environment variable for security
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+key = get_secret_value("OPENAI_API_KEY")
+client = OpenAI(api_key=key)
 
 async def run_conversation(user_message: str):
     # 1. Starts a conversation with the OpenAI agent.
@@ -114,7 +112,7 @@ def get_current_weather(location: str, unit: str = "celsius"):
     """
     Get the current weather in a given location using the OpenWeatherMap API.
     """
-    api_key = os.environ.get("OPEN_WEATHER_API_KEY")
+    api_key = get_secret_value("OPEN_WEATHER_API_KEY")
     if not api_key:
         return json.dumps({"location": location, "temperature": "unknown", "error": "OPEN_WEATHER_API_KEY not set"})
 
@@ -146,20 +144,4 @@ def get_current_weather(location: str, unit: str = "celsius"):
 available_functions = {
             "get_current_weather": get_current_weather,
         }
-app = FastAPI()
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    with open("index.html") as f:
-        return f.read()
-# 1. Receive a request with a location
-@app.post("/chat")
-async def chat(request: Request):
-    data = await request.json()
-    location = data.get("location")
-    user_message = f"What's the weather like at {location}?"
-    response = await run_conversation(user_message)
-    return {"response": response}
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=9000)
