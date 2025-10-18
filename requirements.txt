@@ -1,9 +1,15 @@
+uvicorn[standard]
+gunicorn
 openai
 python-dotenv
 requests
 pydantic
 fastapi
 openai-agents
+google-adk[database]
+sqlalchemy-cockroachdb
+sqlalchemy
+psycopg2-binary
+cockroachdb
+deprecated
 google-cloud-secret-manager
-uvicorn[standard]
-gunicorn

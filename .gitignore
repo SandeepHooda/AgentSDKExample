@@ -1,3 +1,4 @@
 /__pycache__/**
 /.idea/**
 /com/services/__pycache__/**
+*.pyc

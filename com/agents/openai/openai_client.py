@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import requests
 from pydantic import BaseModel
 from com.services.gcp_secret import get_secret_value
-
+import os
 
 models = ["gpt-4-1106-preview", "gpt-4o", "gpt-4o-mini"]
 tools = [
@@ -34,8 +34,13 @@ tools = [
 # Load environment variables from .env file
 load_dotenv()
 
-# It's recommended to set the API key via environment variable for security
 key = get_secret_value("OPENAI_API_KEY")
+os.environ["OPENAI_API_KEY"] = key
+"""key = os.environ["OPENAI_API_KEY"]
+if key is None or key == "":
+    key = get_secret_value("OPENAI_API_KEY")
+    os.environ["OPENAI_API_KEY"] = key
+"""
 client = OpenAI(api_key=key)
 
 async def run_conversation(user_message: str):
@@ -113,6 +118,11 @@ def get_current_weather(location: str, unit: str = "celsius"):
     Get the current weather in a given location using the OpenWeatherMap API.
     """
     api_key = get_secret_value("OPEN_WEATHER_API_KEY")
+    os.environ["OPEN_WEATHER_API_KEY"] = api_key
+    """api_key = os.environ.get("OPEN_WEATHER_API_KEY")
+    if api_key is None or api_key == "":
+        api_key = get_secret_value("OPEN_WEATHER_API_KEY")
+    """
     if not api_key:
         return json.dumps({"location": location, "temperature": "unknown", "error": "OPEN_WEATHER_API_KEY not set"})
 

@@ -91,6 +91,7 @@ async def run_workflow(workflow_input: WorkflowInput):
 
   conversation_history.extend([item.to_input_item() for item in web_research_agent_result_temp.new_items])
 
+  # This is just to show both text and parsed output, it is not used further in the workflow
   web_research_agent_result = {
     "output_text": web_research_agent_result_temp.final_output.json(),
     "output_parsed": web_research_agent_result_temp.final_output.model_dump()
