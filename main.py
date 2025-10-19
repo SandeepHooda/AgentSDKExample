@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 
 from com.agents.google.weather_tool.adk_weather import call_weather_agent_google_adk
+from com.agents.openai.weather_tool.adk_weather import call_weather_agent_openai_adk
 from com.agents.openai.weather_tool.openai_client import get_weather_open_ai_client
 from com.agents.openai.company_research.openai_agent_builder import run_workflow, WorkflowInput
 import os
@@ -54,6 +55,18 @@ async def getYoutubeReels(topic_name: str = "OpenAI"):
     )
 
 
+    return {"response": response_data}
+
+@app.get("/openai-adk-weather")
+async def getWeatherOpenAI(city_name: str = "Panchkula, Haryana"):
+
+    workflow_input: WorkflowInput = WorkflowInput(
+        input_as_text=f"Tell me the weather in city_name {city_name}"
+    )
+
+    response_data = await call_weather_agent_openai_adk(
+        workflow_input=workflow_input
+    )
     return {"response": response_data}
 
 @app.get("/google-adk-weather")
