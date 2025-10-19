@@ -43,7 +43,7 @@ if key is None or key == "":
 """
 client = OpenAI(api_key=key)
 
-async def run_conversation(user_message: str):
+async def get_weather_open_ai_client(user_message: str):
     # 1. Starts a conversation with the OpenAI agent.
     greeting = get_time_based_greeting()
 

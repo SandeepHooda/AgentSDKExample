@@ -120,7 +120,7 @@ async def setup_session_and_runner(user_id: str,   session_id: str):
 
 
 # Agent Interaction
-async def call_weather_agent_async(query: str, user_id: str,   session_id: str):
+async def call_weather_agent_google_adk(query: str, user_id: str, session_id: str):
     print(f"User_ID: {user_id}, Session_ID: {session_id}")
     content = types.Content(role='user', parts=[types.Part(text=query)])
     session, runner = await setup_session_and_runner( user_id,   session_id)

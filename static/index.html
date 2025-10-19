@@ -31,16 +31,21 @@
             if (location) {
                 chatHistory.innerHTML += `<p><strong>You:</strong> What's the weather like at ${location}?</p>`;
 
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ location: location })
+                const response = await fetch('/openai-client-weather?city_name='+location, {
+                    method: 'GET'
                 });
 
                 const data = await response.json();
                 chatHistory.innerHTML += `<p><strong>Agent:</strong> ${data.response}</p>`;
                 locationInput.value = '';
                 chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+        });
+
+        document.getElementById('location-input').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('send-button').click();
             }
         });
     </script>

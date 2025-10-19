@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 
-from com.agents.google.weather_tool.weather_agent import call_weather_agent_async
-from com.agents.openai.openai_client import run_conversation
-from com.agents.openai.openai_agent_builder import run_workflow, WorkflowInput
+from com.agents.google.weather_tool.adk_weather import call_weather_agent_google_adk
+from com.agents.openai.weather_tool.openai_client import get_weather_open_ai_client
+from com.agents.openai.company_research.openai_agent_builder import run_workflow, WorkflowInput
 import os
 import uuid
 from com.services.gcp_secret import get_secret_value
@@ -25,12 +25,10 @@ async def read_root():
     with open("static/index.html") as f:
         return f.read()
 
-@app.post("/chat")
-async def chat(request: Request):
-    data = await request.json()
-    location = data.get("location")
-    user_message = f"What's the weather like at {location}?"
-    response = await run_conversation(user_message)
+@app.get("/openai-client-weather")
+async def chat(city_name: str = "Panchkula, Haryana"):
+    user_message = f"What's the weather like at {city_name}?"
+    response = await get_weather_open_ai_client(user_message)
     return {"response": response}
 
 @app.get("/openai-adk")
@@ -59,13 +57,13 @@ async def getYoutubeReels(topic_name: str = "OpenAI"):
     return {"response": response_data}
 
 @app.get("/google-adk-weather")
-async def getWeather(city_name: str = "OpenAI"):
+async def getWeather(city_name: str = "Panchkula, Haryana"):
     user_input = f"Tell me the weather in city_name {city_name}"
 
     user_id = "some_user_id"  # Replace with actual user identifier
     session_id = str(uuid.uuid4())
 
-    response_data = await call_weather_agent_async(
+    response_data = await call_weather_agent_google_adk(
         query=user_input,
         user_id=user_id,
         session_id=session_id
