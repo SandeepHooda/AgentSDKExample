@@ -1,0 +1,3 @@
+Your inputs are latitude and longitude of a city stored in  `state['lat_long']`.
+You need to use weather tool provided to you to get the current weather of that city.
+The tool returns the temprature in celsius if unit is not specified.

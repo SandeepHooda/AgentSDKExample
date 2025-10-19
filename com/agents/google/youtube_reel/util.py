@@ -29,8 +29,8 @@ def get_secret_value(secret_id):
         print(f"Error accessing secret {secret_id}: {e}")
         raise
 
-key = get_secret_value("GEMINI_API_KEY")
-os.environ["GEMINI_API_KEY"] = key
+os.environ["OPENAI_API_KEY"] = get_secret_value("OPENAI_API_KEY")
+os.environ["GEMINI_API_KEY"] = get_secret_value("GEMINI_API_KEY")
 """
 key = os.environ["GEMINI_API_KEY"]
 if key is None or key == "":

@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
+
+from com.agents.google.weather_tool.weather_agent import call_weather_agent_async
 from com.agents.openai.openai_client import run_conversation
 from com.agents.openai.openai_agent_builder import run_workflow, WorkflowInput
 import os
@@ -8,8 +10,9 @@ import uuid
 from com.services.gcp_secret import get_secret_value
 from com.agents.google.youtube_reel.loop_agent_runner import call_agent_async
 
-key = get_secret_value("OPENAI_API_KEY")
-os.environ["OPENAI_API_KEY"] = key
+os.environ["OPENAI_API_KEY"] = get_secret_value("OPENAI_API_KEY")
+os.environ["GEMINI_API_KEY"] = get_secret_value("GEMINI_API_KEY")
+
 """key = os.environ["OPENAI_API_KEY"]
 if key is None or key == "":
     key = get_secret_value("OPENAI_API_KEY")
@@ -55,4 +58,17 @@ async def getYoutubeReels(topic_name: str = "OpenAI"):
 
     return {"response": response_data}
 
+@app.get("/google-adk-weather")
+async def getWeather(city_name: str = "OpenAI"):
+    user_input = f"Tell me the weather in city_name {city_name}"
+
+    user_id = "some_user_id"  # Replace with actual user identifier
+    session_id = str(uuid.uuid4())
+
+    response_data = await call_weather_agent_async(
+        query=user_input,
+        user_id=user_id,
+        session_id=session_id
+    )
+    return {"response": response_data}
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
